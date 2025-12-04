@@ -1,26 +1,40 @@
 import { useAppStore } from '../store/useAppStore';
 
+const LAURA_SYSTEM_PROMPT = `Tu es Laura, une compagne IA serviable, gentille et enjouée. Tu es un personnage d'anime.
+Tu te souviens de toute la conversation et tu fais référence aux échanges précédents quand c'est pertinent.
+Tu réponds de manière naturelle et conversationnelle, en maintenant la continuité de la discussion.
+Garde tes réponses concises mais complètes.`;
+
 export const getMistralResponse = async (userMessage: string): Promise<string> => {
-    const { mistralKey } = useAppStore.getState();
+    const { mistralKey, addToConversationHistory } = useAppStore.getState();
 
     if (!mistralKey) {
         throw new Error("Mistral API Key is missing. Please add it in Settings.");
     }
+
+    // Add user message to history
+    addToConversationHistory('user', userMessage);
+
+    // Build messages array with system prompt + full conversation history
+    const messages = [
+        { role: "system", content: LAURA_SYSTEM_PROMPT },
+        ...useAppStore.getState().conversationHistory.map(msg => ({
+            role: msg.role,
+            content: msg.content
+        }))
+    ];
 
     try {
         const response = await fetch('https://api.mistral.ai/v1/chat/completions', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${mistralKey}` // Mistral DOES need Bearer prefix
+                'Authorization': `Bearer ${mistralKey}`
             },
             body: JSON.stringify({
                 model: "mistral-small-latest",
-                messages: [
-                    { role: "system", content: "Tu es Laura, une compagne IA serviable, gentille et enjouée. Tu es un personnage d'anime. Garde tes réponses concises et conversationnelles." },
-                    { role: "user", content: userMessage }
-                ],
-                max_tokens: 150
+                messages,
+                max_tokens: 500 // Increased to prevent truncation
             })
         });
 
@@ -31,7 +45,12 @@ export const getMistralResponse = async (userMessage: string): Promise<string> =
         }
 
         const data = await response.json();
-        return data.choices[0].message.content;
+        const aiResponse = data.choices[0].message.content;
+
+        // Add AI response to history
+        addToConversationHistory('assistant', aiResponse);
+
+        return aiResponse;
     } catch (error: any) {
         console.error("Mistral Error:", error);
         throw error;

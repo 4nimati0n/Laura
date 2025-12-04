@@ -5,6 +5,9 @@ export const PoseControls = () => {
     const { poseControls, setPoseRotation, triggerEmotion, setEmotionIntensity,
         lipSyncSensitivity,
         lipSyncSmoothing,
+        lipSyncNoiseFloor,
+        lipSyncSibilantThreshold,
+        lipSyncClosedThreshold,
         setLipSyncSettings,
         showPoseControls
     } = useAppStore();
@@ -132,6 +135,39 @@ export const PoseControls = () => {
                         step="0.01"
                         value={lipSyncSmoothing}
                         onChange={(e) => setLipSyncSettings({ smoothing: parseFloat(e.target.value) })}
+                    />
+                </div>
+                <div className="slider-row">
+                    <label>Seuil de Bruit ({lipSyncNoiseFloor.toFixed(2)})</label>
+                    <input
+                        type="range"
+                        min="0.0"
+                        max="0.2"
+                        step="0.01"
+                        value={lipSyncNoiseFloor}
+                        onChange={(e) => setLipSyncSettings({ noiseFloor: parseFloat(e.target.value) })}
+                    />
+                </div>
+                <div className="slider-row">
+                    <label>Seuil Sibilantes ({lipSyncSibilantThreshold.toFixed(1)})</label>
+                    <input
+                        type="range"
+                        min="0.5"
+                        max="3.0"
+                        step="0.1"
+                        value={lipSyncSibilantThreshold}
+                        onChange={(e) => setLipSyncSettings({ sibilantThreshold: parseFloat(e.target.value) })}
+                    />
+                </div>
+                <div className="slider-row">
+                    <label>Seuil Fermeture ({lipSyncClosedThreshold.toFixed(2)})</label>
+                    <input
+                        type="range"
+                        min="0.05"
+                        max="0.5"
+                        step="0.01"
+                        value={lipSyncClosedThreshold}
+                        onChange={(e) => setLipSyncSettings({ closedThreshold: parseFloat(e.target.value) })}
                     />
                 </div>
             </div>

@@ -124,7 +124,7 @@ export const Avatar = () => {
             // --- Procedural Animations ---
 
             // Lip Sync
-            const { audioAnalyser, humeFft, useHume, lipSyncSensitivity, lipSyncSmoothing } = useAppStore.getState();
+            const { audioAnalyser, humeFft, useHume, lipSyncSensitivity, lipSyncSmoothing, lipSyncNoiseFloor, lipSyncSibilantThreshold, lipSyncClosedThreshold } = useAppStore.getState();
 
             let energyOu = 0, energyOh = 0, energyAa = 0, energyEe = 0, energyIh = 0;
             let hasAudio = false;
@@ -201,9 +201,9 @@ export const Avatar = () => {
             if (hasAudio) {
                 // --- Consonant Simulation Logic ---
                 // Sibilant Detection (S, T, CH, SH, Z)
-                const isSibilant = energyIh > (energyAa * 1.2) && energyIh > (energyOu * 1.2);
+                const isSibilant = energyIh > (energyAa * lipSyncSibilantThreshold) && energyIh > (energyOu * lipSyncSibilantThreshold);
                 // Closed/Hum Detection (M, N, B, P)
-                const isClosed = energyOu > 0.2 && energyAa < (energyOu * 0.6) && energyIh < (energyOu * 0.4);
+                const isClosed = energyOu > lipSyncClosedThreshold && energyAa < (energyOu * 0.6) && energyIh < (energyOu * 0.4);
 
                 // Apply sensitivity
                 let vOu = MathUtils.clamp(energyOu * lipSyncSensitivity, 0, 1);
@@ -226,12 +226,11 @@ export const Avatar = () => {
                     vEe *= 0.05;
                     vIh *= 0.05;
                 } else {
-                    const noiseFloor = 0.1;
-                    if (vAa < noiseFloor) vAa = 0;
-                    if (vOh < noiseFloor) vOh = 0;
-                    if (vOu < noiseFloor) vOu = 0;
-                    if (vEe < noiseFloor) vEe = 0;
-                    if (vIh < noiseFloor) vIh = 0;
+                    if (vAa < lipSyncNoiseFloor) vAa = 0;
+                    if (vOh < lipSyncNoiseFloor) vOh = 0;
+                    if (vOu < lipSyncNoiseFloor) vOu = 0;
+                    if (vEe < lipSyncNoiseFloor) vEe = 0;
+                    if (vIh < lipSyncNoiseFloor) vIh = 0;
                 }
 
                 const lerpFactor = lipSyncSmoothing;

@@ -66,7 +66,14 @@ interface AppState {
   // Lip Sync Settings
   lipSyncSensitivity: number;
   lipSyncSmoothing: number;
-  setLipSyncSettings: (settings: Partial<{ sensitivity: number; smoothing: number }>) => void;
+  lipSyncNoiseFloor: number;
+  lipSyncSibilantThreshold: number;
+  lipSyncClosedThreshold: number;
+  setLipSyncSettings: (settings: Partial<{ sensitivity: number; smoothing: number; noiseFloor: number; sibilantThreshold: number; closedThreshold: number }>) => void;
+  // Conversation History
+  conversationHistory: Array<{ role: 'user' | 'assistant'; content: string }>;
+  addToConversationHistory: (role: 'user' | 'assistant', content: string) => void;
+  clearConversationHistory: () => void;
 
   showPoseControls: boolean;
   setShowPoseControls: (show: boolean) => void;
@@ -105,6 +112,12 @@ export const useAppStore = create<AppState>((set) => ({
   // Default Lip Sync Settings
   lipSyncSensitivity: 0.3,
   lipSyncSmoothing: 0.71,
+  lipSyncNoiseFloor: 0.02,
+  lipSyncSibilantThreshold: 1.2,
+  lipSyncClosedThreshold: 0.2,
+
+  // Conversation History for multi-turn chat
+  conversationHistory: [],
 
   lastAudioBuffer: null,
 
@@ -175,8 +188,15 @@ export const useAppStore = create<AppState>((set) => ({
   setAudioAnalyser: (audioAnalyser) => set({ audioAnalyser }),
   setLipSyncSettings: (settings) => set((state) => ({
     lipSyncSensitivity: settings.sensitivity ?? state.lipSyncSensitivity,
-    lipSyncSmoothing: settings.smoothing ?? state.lipSyncSmoothing
+    lipSyncSmoothing: settings.smoothing ?? state.lipSyncSmoothing,
+    lipSyncNoiseFloor: settings.noiseFloor ?? state.lipSyncNoiseFloor,
+    lipSyncSibilantThreshold: settings.sibilantThreshold ?? state.lipSyncSibilantThreshold,
+    lipSyncClosedThreshold: settings.closedThreshold ?? state.lipSyncClosedThreshold
   })),
+  addToConversationHistory: (role, content) => set((state) => ({
+    conversationHistory: [...state.conversationHistory, { role, content }]
+  })),
+  clearConversationHistory: () => set({ conversationHistory: [] }),
   setLastAudioBuffer: (lastAudioBuffer) => set({ lastAudioBuffer }),
   setUseDeepgram: (useDeepgram) => {
     localStorage.setItem('laura_use_deepgram', String(useDeepgram));
